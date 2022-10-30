@@ -39,7 +39,7 @@ __all__ = (
 
 ItemT_co = TypeVar("ItemT_co", bound="Item", covariant=True)
 
-
+log = logging.getLogger(__name__)
 class Asset:
     """Base most version of an item. This class should only be received when Steam fails to find a matching item for
     its class and instance IDs.
