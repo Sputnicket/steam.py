@@ -6,6 +6,7 @@ import asyncio
 import dis
 import sys
 import types
+import random
 import warnings
 from collections.abc import Iterator, Sequence
 from datetime import datetime, timedelta
@@ -694,7 +695,7 @@ class TradeOffer:
         if resp.get("needs_mobile_confirmation", False):
             for tries in [15,25]:
                 try:
-                    await asyncio.sleep(5) #65s max runtime
+                    await asyncio.sleep(random.randint(0,5))
                     return await self.confirm()
                 except ConfirmationError:
                     break
