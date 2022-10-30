@@ -692,7 +692,7 @@ class TradeOffer:
         assert self.partner is not None
         resp = await self._state.http.accept_user_trade(self.partner.id64, self.id)
         if resp.get("needs_mobile_confirmation", False):
-            for tries in range(11):
+            for tries in [4,16,32,3]:
                 try:
                     return await self.confirm()
                 except ConfirmationError:
