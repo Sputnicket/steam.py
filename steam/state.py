@@ -292,7 +292,7 @@ class ConnectionState(Registerable):
         return self.user._friends[id64]
 
     def get_confirmation(self, id: int) -> Confirmation | None:
-        console.log(_confirmations)
+        log.debug(f'all confirms {self_confirmations}')
         return self._confirmations.get(id)
 
     async def fetch_confirmation(self, id: int) -> Confirmation | None:
