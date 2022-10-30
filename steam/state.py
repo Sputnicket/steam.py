@@ -368,7 +368,7 @@ class ConnectionState(Registerable):
         return ret
 
     async def poll_trades(self) -> None:
-        if self.polling_trades or not self.http.api_key:
+        if not self.http.api_key:
             return
 
         self.polling_trades = True
