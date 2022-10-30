@@ -376,7 +376,7 @@ class ConnectionState(Registerable):
             await self.fill_trades()
 
             while self._trades_to_watch:  # watch trades for changes
-                await asyncio.sleep(5)
+                await asyncio.sleep(4)
                 await self.fill_trades()
         finally:
             self.polling_trades = False
@@ -397,7 +397,7 @@ class ConnectionState(Registerable):
             self.trade_queue += received_trades
             self.trade_queue += sent_trades
         except Exception as exc:
-            await asyncio.sleep(30)
+            await asyncio.sleep(40)
             log.info("Error while polling trades", exc_info=exc)
 
     async def wait_for_trade(self, id: int) -> TradeOffer:
