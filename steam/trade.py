@@ -698,7 +698,7 @@ class TradeOffer:
                 except ConfirmationError:
                     break
                 except ClientException:
-                    if tries == 10:
+                    if tries == 3:
                         raise ClientException("Failed to accept trade offer") from None
                     await asyncio.sleep(tries)
 
