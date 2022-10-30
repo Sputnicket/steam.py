@@ -360,8 +360,7 @@ class ConnectionState(Registerable):
         return ret
 
     async def poll_trades(self) -> None:
-        if self.polling_trades or not await self.http.get_api_key():
-            return
+        return
 
         self.polling_trades = True
         try:
@@ -389,7 +388,7 @@ class ConnectionState(Registerable):
             self.trade_queue += received_trades
             self.trade_queue += sent_trades
         except Exception as exc:
-            await asyncio.sleep(30)
+            await asyncio.sleep(60)
             log.info("Error while polling trades", exc_info=exc)
 
     async def wait_for_trade(self, id: int) -> TradeOffer:
