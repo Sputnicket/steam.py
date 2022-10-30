@@ -11,7 +11,6 @@ import warnings
 from collections.abc import Iterator, Sequence
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Generic, NamedTuple, TypeVar, overload
-import logging
 from typing_extensions import Self, TypeAlias
 
 from . import utils
@@ -39,7 +38,6 @@ __all__ = (
 
 ItemT_co = TypeVar("ItemT_co", bound="Item", covariant=True)
 
-log = logging.getLogger(__name__)
 class Asset:
     """Base most version of an item. This class should only be received when Steam fails to find a matching item for
     its class and instance IDs.
@@ -575,7 +573,6 @@ class TradeOffer:
         self._id: int | None = None
         self._has_been_sent = False
         
-        self.retries = 0
 
     @classmethod
     def _from_api(cls, state: ConnectionState, data: trade.TradeOffer, partner: User | SteamID | None = None) -> Self:
@@ -670,7 +667,6 @@ class TradeOffer:
         if self.is_gift():
             return  # no point trying to confirm it
         if not await self._state.fetch_and_confirm_confirmation(self.id):
-            log.debug('No matching confirmation could be found for this trade: trade.py: confirm')
             raise ConfirmationError("No matching confirmation could be found for this trade")
         self._state._confirmations.pop(self.id, None)
 
@@ -701,14 +697,11 @@ class TradeOffer:
                     timeout = random.randint(0,5)
                     await asyncio.sleep(timeout)
                     return await self.confirm()
-                    self.retries += timeout
                 except ConfirmationError:
                     break
                 except ClientException:
                     if tries == 20:
-                        log.debug(f'Failed to accept tradeoffer; token; {self.token} id; {self._id}. Caused by timeout')
                         raise ClientException("Failed to accept trade offer") from None
-                    self.retries += timeout
                     await asyncio.sleep(tries)
 
     async def decline(self) -> None:

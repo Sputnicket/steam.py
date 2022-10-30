@@ -368,7 +368,7 @@ class ConnectionState(Registerable):
         return ret
 
     async def poll_trades(self) -> None:
-        if self.polling_trades:
+        if self.polling_trades or not self.http.api_key:
             return
 
         self.polling_trades = True
@@ -419,20 +419,21 @@ class ConnectionState(Registerable):
 
     async def _fetch_confirmations(self) -> dict[int, Confirmation]:
         params = await self._create_confirmation_params("conf")
-        headers = {'X-Requested-With': 'com.valvesoftware.android.steam.community'}
+        headers = {"X-Requested-With": "com.valvesoftware.android.steam.community"}
         resp = await self.http.get(URL.COMMUNITY / "mobileconf/conf", params=params, headers=headers)
 
         if "incorrect Steam Guard codes." in resp:
             raise InvalidCredentials("identity_secret is incorrect")
 
         soup = BeautifulSoup(resp, HTML_PARSER)
+        log.debug('fetched confirmation')
         if soup.select("#mobileconf_empty"):
             return self._confirmations
         for confirmation in soup.select("#mobileconf_list .mobileconf_list_entry"):
             data_conf_id = confirmation["data-confid"]
             key = confirmation["data-key"]
             trade_id = int(confirmation.get("data-creator", 0))
-            confirmation_id = confirmation["id"].split("conf")[1]
+            confirmation_id = confirmation["id"].split("conf")[1] #automatically perform fetch confirmations and approve all confirmations
             if trade_id in self._confirmations_to_ignore:
                 continue
             self._confirmations[trade_id] = Confirmation(self, confirmation_id, data_conf_id, key, trade_id)
@@ -475,7 +476,7 @@ class ConnectionState(Registerable):
                 await confirmation.confirm()
                 return True
 
-        return False
+        return False    
     # ws stuff
 
     @property
