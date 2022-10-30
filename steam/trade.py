@@ -11,7 +11,7 @@ import warnings
 from collections.abc import Iterator, Sequence
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Generic, NamedTuple, TypeVar, overload
-
+import logging
 from typing_extensions import Self, TypeAlias
 
 from . import utils
@@ -574,6 +574,8 @@ class TradeOffer:
         self.state = TradeOfferState.Invalid
         self._id: int | None = None
         self._has_been_sent = False
+        
+        self.retries = 0
 
     @classmethod
     def _from_api(cls, state: ConnectionState, data: trade.TradeOffer, partner: User | SteamID | None = None) -> Self:
@@ -668,6 +670,7 @@ class TradeOffer:
         if self.is_gift():
             return  # no point trying to confirm it
         if not await self._state.fetch_and_confirm_confirmation(self.id):
+            log.debug('No matching confirmation could be found for this trade: trade.py: confirm')
             raise ConfirmationError("No matching confirmation could be found for this trade")
         self._state._confirmations.pop(self.id, None)
 
@@ -693,15 +696,19 @@ class TradeOffer:
         assert self.partner is not None
         resp = await self._state.http.accept_user_trade(self.partner.id64, self.id)
         if resp.get("needs_mobile_confirmation", False):
-            for tries in [15,25]:
+            for tries in [5,15,20]:
                 try:
-                    await asyncio.sleep(random.randint(0,5))
+                    timeout = random.randint(0,5)
+                    await asyncio.sleep(timeout)
                     return await self.confirm()
+                    self.retries += timeout
                 except ConfirmationError:
                     break
                 except ClientException:
-                    if tries == 30:
+                    if tries == 20:
+                        log.debug(f'Failed to accept tradeoffer; token; {self.token} id; {self._id}. Caused by timeout')
                         raise ClientException("Failed to accept trade offer") from None
+                    self.retries += timeout
                     await asyncio.sleep(tries)
 
     async def decline(self) -> None:
