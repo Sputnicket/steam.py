@@ -692,13 +692,14 @@ class TradeOffer:
         assert self.partner is not None
         resp = await self._state.http.accept_user_trade(self.partner.id64, self.id)
         if resp.get("needs_mobile_confirmation", False):
-            for tries in [4,16,32,3]:
+            for tries in [15,25]:
                 try:
+                    await asyncio.sleep(5) #65s max runtime
                     return await self.confirm()
                 except ConfirmationError:
                     break
                 except ClientException:
-                    if tries == 3:
+                    if tries == 30:
                         raise ClientException("Failed to accept trade offer") from None
                     await asyncio.sleep(tries)
 
