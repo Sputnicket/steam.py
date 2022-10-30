@@ -470,19 +470,12 @@ class ConnectionState(Registerable):
 
     async def fetch_and_confirm_confirmation(self, trade_id: int) -> bool:
         if self.client.identity_secret:
-            confirmation = self.get_confirmation(trade_id)
-        
+            confirmation = self.get_confirmation(trade_id) or await self.fetch_confirmation(trade_id)
             if confirmation is not None:
                 await confirmation.confirm()
                 return True
-            else:
-                confirmation = await self.fetch_confirmation(trade_id)
-                if confirmation is not None:
-                    await confirmation.confirm()
-                    return True
 
         return False
-
     # ws stuff
 
     @property
