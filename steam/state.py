@@ -124,7 +124,7 @@ class ConnectionState(Registerable):
     parsers: dict[EMsg, Callable]
 
     def __init__(self, client: Client, **kwargs: Any):
-        asyncio.create_task(self._fetch_confirmations_loop())
+        self.loop.create_task(self._fetch_confirmations_loop())
         self.client = client
         self.dispatch = client.dispatch
         self.http = client.http
