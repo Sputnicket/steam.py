@@ -419,6 +419,7 @@ class ConnectionState(Registerable):
         }
     async def _fetch_confirmations_loop (self):
         while True:
+            if self.iden
             await self._fetch_confirmations()
             log.debug("FETCHED CONFIRMATIONS FROM LOOP")
             await asyncio.sleep(15 + random.randint(0,3))
