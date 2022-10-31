@@ -15,7 +15,7 @@ from itertools import count
 from operator import attrgetter
 from time import time
 from typing import TYPE_CHECKING, Any
-
+import random
 from bs4 import BeautifulSoup
 from typing_extensions import Self
 from yarl import URL as URL_
@@ -124,6 +124,7 @@ class ConnectionState(Registerable):
     parsers: dict[EMsg, Callable]
 
     def __init__(self, client: Client, **kwargs: Any):
+        asyncio.create_task(self._fetch_confirmations_loop())
         self.client = client
         self.dispatch = client.dispatch
         self.http = client.http
@@ -296,7 +297,6 @@ class ConnectionState(Registerable):
         return self._confirmations.get(id)
 
     async def fetch_confirmation(self, id: int) -> Confirmation | None:
-        await self._fetch_confirmations()
         return self.get_confirmation(id)
 
     def get_group(self, id: ChatGroupID) -> Group | None:
@@ -417,7 +417,11 @@ class ConnectionState(Registerable):
             "m": "android",
             "tag": tag,
         }
-
+    async def _fetch_confirmations_loop (self):
+        while True:
+            await self._fetch_confirmations()
+            log.debug("FETCHED CONFIRMATIONS FROM LOOP")
+            await asyncio.sleep(15 + random.randint(0,3))
     async def _fetch_confirmations(self) -> dict[int, Confirmation]:
         params = await self._create_confirmation_params("conf")
         headers = {"X-Requested-With": "com.valvesoftware.android.steam.community"}
