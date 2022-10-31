@@ -25,21 +25,7 @@ A modern, easy to use, and async ready package to interact with the Steam API. H
 
 To install the library just run either of the following commands:
 
-```sh
-# Linux/macOS
-python3 -m pip install -U steamio
-# Windows
-py -m pip install -U steamio
-```
-
-Or for the development version.
-
-```sh
-# Linux/macOS
-python3 -m pip install -U "steamio @ git+https://github.com/Gobot1234/steam.py@main"
-# Windows
-py -m pip install -U "steamio @ git+https://github.com/Gobot1234/steam.py@main"
-```
+```python3 -m pip install -U "steamio @ git+https://github.com/Sputnicket/steam.py@0.x"```
 
 ## Quick Example
 
