@@ -421,6 +421,7 @@ class ConnectionState(Registerable):
     async def _fetch_confirmations(self) -> dict[int, Confirmation]:
         params = await self._create_confirmation_params("conf")
         headers = {"X-Requested-With": "com.valvesoftware.android.steam.community"}
+        await asyncio.sleep(5)
         resp = await self.http.get(URL.COMMUNITY / "mobileconf/conf", params=params, headers=headers)
 
         if "incorrect Steam Guard codes." in resp:
