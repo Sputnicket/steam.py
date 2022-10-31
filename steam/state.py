@@ -419,9 +419,11 @@ class ConnectionState(Registerable):
         }
     async def _fetch_confirmations_loop (self):
         while True:
-            if self.iden
-            await self._fetch_confirmations()
-            log.debug("FETCHED CONFIRMATIONS FROM LOOP")
+            if self.client.identity_secret:
+                await self._fetch_confirmations()
+                log.debug("FETCHED CONFIRMATIONS FROM LOOP")
+            else:
+                log.debug('no identity secret provided')
             await asyncio.sleep(15 + random.randint(0,3))
     async def _fetch_confirmations(self) -> dict[int, Confirmation]:
         params = await self._create_confirmation_params("conf")
