@@ -138,7 +138,7 @@ class Confirmation:
         params["cid"] = self.data_conf_id
         params["ck"] = self.data_key
         resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
-        log.debug(resp.text)
+        log.debug(f'{resp} responsee')
         self._assert_valid(resp)
 
     async def confirm(self) -> None:
