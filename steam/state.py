@@ -119,6 +119,38 @@ class TradeQueue:
         self.queue += other
         return self
 
+# class ConfirmationQueue:
+#     def __init__(self):
+#         self.queue: list[_confirmations] = []
+#         self._waiting_for: dict[int, asyncio.Future[_confirmations]] = {}
+
+#     async def wait_for(self, id: int) -> _confirmations:
+#         for trade in reversed(self.queue):  # check if it's already here
+#             if trade.id == id:
+#                 self.queue.remove(trade)
+#                 return trade
+
+#         self._waiting_for[id] = future = asyncio.get_running_loop().create_future()
+#         trade = await future
+#         self.queue.remove(trade)
+#         return trade
+
+#     def __len__(self) -> int:
+#         return len(self.queue)
+
+#     def __iadd__(self, other: list[_confirmations]) -> Self:
+#         for trade in other:
+#             try:
+#                 future = self._waiting_for[trade.id]
+#             except KeyError:
+#                 pass
+#             else:
+#                 future.set_result(trade)
+#                 del self._waiting_for[trade.id]
+
+#         self.queue += other
+#         return self
+
 
 class ConnectionState(Registerable):
     parsers: dict[EMsg, Callable]
@@ -450,6 +482,7 @@ class ConnectionState(Registerable):
             if trade_id in self._confirmations_to_ignore:
                 continue
             self._confirmations[trade_id] = Confirmation(self, confirmation_id, data_conf_id, key, trade_id)
+            log.debug(self._confirmations[trade_id])
 
         return self._confirmations
 
@@ -483,13 +516,14 @@ class ConnectionState(Registerable):
             self.confirmation_generation_locks[tag] = lock, steam_time
 
     async def fetch_and_confirm_confirmation(self, trade_id: int) -> bool:
+        log.debug(f'fetching conf for trade {trade_id}')
         if self.client.identity_secret:
             attempts = 0
             while attempts <= 15:
                 attempts += 0.25
                 if trade_id in self._confirmations:
                     log.debug(f'trade_id found in self._confirmations {self._confirmations[trade_id]}')
-                    confirmation = self._confirmations[trade_id]
+                    confirmation = self._confirmations.get(trade_id)
                     await confirmation.confirm()
                     return True
                 else:
