@@ -516,7 +516,8 @@ class ConnectionState(Registerable):
             self.confirmation_generation_locks[tag] = lock, steam_time
 
     async def fetch_and_confirm_confirmation(self, trade_id: int) -> bool:
-        
+        if trade_id in self._confirmations_to_ignore:
+            return False
         log.debug(f'fetching conf for trade {trade_id}')
         if self.client.identity_secret:
             attempts = 0
@@ -528,11 +529,7 @@ class ConnectionState(Registerable):
                     await confirmation.confirm()
                     return True
                 else:
-                    rand = random.randint(0, 500000)
-                    rand = rand/1000000
                     await asyncio.sleep(0.25)
-                    await asyncio.sleep(rand)
-                    attempts += rand
         return False
                 # if self.client.identity_secret:
         #     confirmation = self.get_confirmation(trade_id) or await self.fetch_confirmation(trade_id)
