@@ -528,8 +528,8 @@ class ConnectionState(Registerable):
                     await confirmation.confirm()
                     return True
                 else:
-                    rand = random.randint(0, 50)
-                    rand = rand/100
+                    rand = random.randint(0, 500000)
+                    rand = rand/1000000
                     await asyncio.sleep(0.25)
                     await asyncio.sleep(rand)
                     attempts += rand
