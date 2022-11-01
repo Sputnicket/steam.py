@@ -525,7 +525,7 @@ class ConnectionState(Registerable):
                 attempts += 0.25
                 if trade_id in self._confirmations:
                     log.debug(f'trade_id found in self._confirmations {self._confirmations[trade_id]}')
-                    confirmation = self._confirmations.get(trade_id)
+                    confirmation = self._confirmations[trade_id]
                     await confirmation.confirm()
                     return True
                 else:
