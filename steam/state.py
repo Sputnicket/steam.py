@@ -405,8 +405,12 @@ class ConnectionState(Registerable):
         self.loop.create_task(self.poll_trades())  # start re-polling trades
         return await self.trade_queue.wait_for(id=id)
 
-    # confirmations
-
+    # # confirmations
+    # async def _wait_for_confirmation(self, trade_id: int) -> bool:
+    #     while True:
+    #         availible_confirmations = self._confirmations
+    #         if trade_id in availible_confirmations:
+    #             await confirmation.confirm()
     async def _create_confirmation_params(self, tag: str) -> dict[str, Any]:
         code, timestamp = await self._generate_confirmation_code(tag)
         return {
@@ -480,12 +484,23 @@ class ConnectionState(Registerable):
 
     async def fetch_and_confirm_confirmation(self, trade_id: int) -> bool:
         if self.client.identity_secret:
-            confirmation = self.get_confirmation(trade_id) or await self.fetch_confirmation(trade_id)
-            if confirmation is not None:
-                await confirmation.confirm()
-                return True
+            attempts = 0
+            while attempts <= 15:
+                attempts += 0.25
+                if trade_id in self._confirmations:
+                    log.debug(f'trade_id found in self._confirmations {self._confirmations[trade_id]}')
+                    confirmation = self._confirmations[trade_id]
+                    await confirmation.confirm()
+                    return True
+                else:
+                    await asyncio.sleep(0.25)
+        return False
+                # if self.client.identity_secret:
+        #     confirmation = self.get_confirmation(trade_id) or await self.fetch_confirmation(trade_id)
+        #     if confirmation is not None:
+        #         await confirmation.confirm()
+        #         return True
 
-        return False    
     # ws stuff
 
     @property
