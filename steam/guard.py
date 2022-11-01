@@ -9,7 +9,7 @@ import struct
 from hashlib import sha1
 from time import time
 from typing import TYPE_CHECKING, Any
-
+import logging
 from ._const import URL
 from .errors import ConfirmationError
 from .utils import Intable
@@ -25,7 +25,7 @@ __all__ = (
     "Confirmation",
 )
 
-
+log = logging.getLogger(__name__)
 def generate_one_time_code(shared_secret: str, timestamp: int | None = None) -> str:
     """Generate a Steam Guard code for signing in or at a specific time.
 
@@ -132,6 +132,7 @@ class Confirmation:
             raise ConfirmationError
 
     async def _perform_op(self, op: str) -> None:
+        log.debug('performing op %s', op)
         params = await self._confirm_params(op)
         params["op"] = op
         params["cid"] = self.data_conf_id
@@ -140,6 +141,7 @@ class Confirmation:
         self._assert_valid(resp)
 
     async def confirm(self) -> None:
+        log.debug('recivied confirmation')
         await self._perform_op("allow")
 
     async def cancel(self) -> None:
