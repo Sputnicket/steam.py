@@ -140,8 +140,12 @@ class Confirmation:
         resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
         log.debug(f'{resp} responsee')
         self._assert_valid(resp)
-        if resp == {'success': False}:
-            log.debug(f'resp failed {resp.content}')
+        if 'False' in resp:
+            log.debug(f'!!!! WARNING !!!!')
+            log.debug(f'resp.content {resp.content}')
+            log.debug(f'resp.status {resp.status_code}')
+            log.debug(f'resp.headers {resp.headers}')
+            log.debug('OVER')
 
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
