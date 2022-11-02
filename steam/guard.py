@@ -10,11 +10,11 @@ from hashlib import sha1
 from time import time
 from typing import TYPE_CHECKING, Any
 import logging
+from tenacity import retry, TryAgain
+import tenacity
 from ._const import URL
 from .errors import ConfirmationError
 from .utils import Intable
-from tenacity import retry, TryAgain
-import tenacity
 if TYPE_CHECKING:
     from .state import ConnectionState
 
