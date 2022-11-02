@@ -147,22 +147,12 @@ class Confirmation:
         log.debug(f'{resp} responsee')
         self._assert_valid(resp)
         if op == "allow":
-            try:
-                resp_json = resp.json()
-                if resp['success'] == False:
-                    log.debug('false response :C')
-                    raise TryAgain
-                else:
-                    return resp_json
-            except Exception as e:
-                if resp.json() is None:
-                    raise TryAgain
-                else:
-                    log.debug('uknown error')
-                    return None
+            if resp['success'] is False:
+                raise TryAgain
+            else:
+                return resp
         else:
-            resp_json = resp.json()
-            return resp_json
+            return resp
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
         await self._perform_op("allow")
