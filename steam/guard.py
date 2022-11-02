@@ -132,7 +132,7 @@ class Confirmation:
             self._state._confirmations_to_ignore.append(self.trade_id)
             raise ConfirmationError
     @retry(
-        wait=tenacity.wait_exponential(multiplier=1, min=4, max=64, max_retry=5),
+        wait=tenacity.wait_exponential(multiplier=1, min=4, max=64),
         stop=tenacity.stop_after_attempt(7))
     async def _perform_op(self, op: str) -> None:
         log.debug('performing op %s', op)
