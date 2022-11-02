@@ -7,7 +7,7 @@ import dataclasses
 import hmac
 import struct
 from hashlib import sha1
-from time import time
+import time
 from typing import TYPE_CHECKING, Any
 import logging
 from tenacity import *
@@ -36,7 +36,7 @@ def generate_one_time_code(shared_secret: str, timestamp: int | None = None) -> 
     timestamp
         The unix timestamp to generate the key for.
     """
-    timestamp = timestamp or int(time())
+    timestamp = timestamp or int(time.time())
     time_buffer = struct.pack(">Q", timestamp // 30)  # pack as Big endian, uint64
     time_hmac = hmac.new(base64.b64decode(shared_secret), time_buffer, digestmod=sha1).digest()
     begin = time_hmac[19] & 0xF
