@@ -13,7 +13,8 @@ import logging
 from ._const import URL
 from .errors import ConfirmationError
 from .utils import Intable
-
+from tenacity import retry, TryAgain
+import tenacity
 if TYPE_CHECKING:
     from .state import ConnectionState
 
@@ -130,7 +131,9 @@ class Confirmation:
         if not resp.get("success", False):
             self._state._confirmations_to_ignore.append(self.trade_id)
             raise ConfirmationError
-
+    @retry(
+        wait=tenacity.wait_exponential(multiplier=1, min=4, max=64, max_retry=5),
+        stop=tenacity.stop_after_attempt(7))
     async def _perform_op(self, op: str) -> None:
         log.debug('performing op %s', op)
         params = await self._confirm_params(op)
@@ -140,13 +143,10 @@ class Confirmation:
         resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
         log.debug(f'{resp} responsee')
         self._assert_valid(resp)
-        if 'False' in resp:
-            log.debug(f'!!!! WARNING !!!!')
-            log.debug(f'resp.content {resp.content}')
-            log.debug(f'resp.status {resp.status_code}')
-            log.debug(f'resp.headers {resp.headers}')
-            log.debug('OVER')
-
+        resp_json = resp.json()
+        if resp['success'] == False:
+            log.debug('false response :C')
+            raise TryAgain
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
         await self._perform_op("allow")
