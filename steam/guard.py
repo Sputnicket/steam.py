@@ -143,16 +143,17 @@ class Confirmation:
         resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
         log.debug(f'{resp} responsee')
         self._assert_valid(resp)
-        try:
-            resp_json = resp.json()
-            if resp['success'] == False:
-                log.debug('false response :C')
-                raise TryAgain
-        except:
-            if resp.json() is None:
-                raise TryAgain
-            else:
-                log.debug('uknown error')
+        if op == "allow":
+            try:
+                resp_json = resp.json()
+                if resp['success'] == False:
+                    log.debug('false response :C')
+                    raise TryAgain
+            except Exception as e:
+                if resp.json() is None:
+                    raise TryAgain
+                else:
+                    log.debug('uknown error')
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
         await self._perform_op("allow")
