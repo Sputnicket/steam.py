@@ -11,6 +11,7 @@ from time import time
 from typing import TYPE_CHECKING, Any
 import logging
 from tenacity import retry, TryAgain
+from tenacity.retry import retry_if_exception_type
 from tenacity.wait import wait_exponential
 from tenacity.stop import stop_after_attempt
 from ._const import URL
@@ -132,9 +133,10 @@ class Confirmation:
         if not resp.get("success", False):
             self._state._confirmations_to_ignore.append(self.trade_id)
             raise ConfirmationError
-    @retry(
+    @retry( #retry if TryAgain is raised
         wait=wait_exponential(multiplier=1, min=4, max=64),
-        stop=stop_after_attempt(3))
+        stop=stop_after_attempt(3), 
+        retry=retry_if_exception_type(TryAgain))
     async def _perform_op(self, op: str) -> None:
         log.debug('performing op %s', op)
         params = await self._confirm_params(op)
