@@ -143,8 +143,8 @@ class Confirmation:
         resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
         log.debug(f'{resp} responsee')
         self._assert_valid(resp)
-        resp_json = resp.json()
         try:
+            resp_json = resp.json()
             if resp['success'] == False:
                 log.debug('false response :C')
                 raise TryAgain
