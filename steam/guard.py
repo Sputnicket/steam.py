@@ -11,7 +11,8 @@ from time import time
 from typing import TYPE_CHECKING, Any
 import logging
 from tenacity import retry, TryAgain
-import tenacity
+from tenacity.wait import wait_exponential
+from tenacity.stop import stop_after_attempt
 from ._const import URL
 from .errors import ConfirmationError
 from .utils import Intable
@@ -132,8 +133,8 @@ class Confirmation:
             self._state._confirmations_to_ignore.append(self.trade_id)
             raise ConfirmationError
     @retry(
-        wait=tenacity.wait_exponential(multiplier=1, min=4, max=64),
-        stop=tenacity.stop_after_attempt(7))
+        wait=wait_exponential(multiplier=1, min=4, max=64),
+        stop=stop_after_attempt(3))
     async def _perform_op(self, op: str) -> None:
         log.debug('performing op %s', op)
         params = await self._confirm_params(op)
@@ -149,11 +150,17 @@ class Confirmation:
                 if resp['success'] == False:
                     log.debug('false response :C')
                     raise TryAgain
+                else:
+                    return resp_json
             except Exception as e:
                 if resp.json() is None:
                     raise TryAgain
                 else:
                     log.debug('uknown error')
+                    return None
+        else:
+            resp_json = resp.json()
+            return resp_json
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
         await self._perform_op("allow")
