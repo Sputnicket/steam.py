@@ -133,7 +133,8 @@ class Confirmation:
     @retry(
         stop=stop_after_attempt(7),
         wait=wait_fixed(0.5),
-        after=after_log(log, logging.DEBUG))
+        after=after_log(log, logging.DEBUG)
+        )
     async def _perform_op(self, op: str) -> None:
         log.debug('performing op %s', op)
         params = await self._confirm_params(op)
@@ -143,6 +144,9 @@ class Confirmation:
         resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
         log.debug(f'{resp} responsee')
         self._assert_valid(resp)
+        if op == "allow":
+            if resp['success'] is False:
+                raise TryAgain
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
         await self._perform_op("allow")
