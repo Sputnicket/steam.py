@@ -136,7 +136,6 @@ class Confirmation:
         after=after_log(log, logging.DEBUG)
         )
     async def _perform_op(self, op: str) -> None:
-        rand = random.randint(0,1000)
         log.debug('performing op %s', op)
         params = await self._confirm_params(op)
         params["op"] = op
