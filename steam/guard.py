@@ -1,7 +1,7 @@
 """Licensed under The MIT License (MIT) - Copyright (c) 2020-present James H-B. See LICENSE"""
 
 from __future__ import annotations
-
+import random
 import base64
 import dataclasses
 import hmac
@@ -136,6 +136,7 @@ class Confirmation:
         after=after_log(log, logging.DEBUG)
         )
     async def _perform_op(self, op: str) -> None:
+        rand = random.randint(0,1000)
         log.debug('performing op %s', op)
         params = await self._confirm_params(op)
         params["op"] = op
@@ -145,7 +146,7 @@ class Confirmation:
         log.debug(f'{resp} responsee')
         self._assert_valid(resp)
         if op == "allow":
-            if resp['success'] is False:
+            if resp.status_code is not 200:
                 raise TryAgain
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
