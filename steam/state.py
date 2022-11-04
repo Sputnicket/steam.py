@@ -521,7 +521,7 @@ class ConnectionState(Registerable):
         log.debug(f'fetching conf for trade {trade_id}')
         if self.client.identity_secret:
             attempts = 0
-            while attempts <= 15:
+            while attempts <= 30:
                 attempts += 0.25
                 if trade_id in self._confirmations:
                     log.debug(f'trade_id found in self._confirmations {self._confirmations[trade_id]}')

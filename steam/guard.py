@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import random
+from time import time
 import base64
 import dataclasses
 import hmac
@@ -145,7 +146,7 @@ class Confirmation:
         log.debug(f'{resp} responsee')
         self._assert_valid(resp)
         if op == "allow":
-            if resp is not {'success': True}:
+            if resp is not {'success': False}:
                 raise TryAgain
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
