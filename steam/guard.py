@@ -145,7 +145,7 @@ class Confirmation:
         log.debug(f'{resp} responsee')
         self._assert_valid(resp)
         if op == "allow":
-            if resp.status_code is not 200:
+            if resp is not {'success': True}:
                 raise TryAgain
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
