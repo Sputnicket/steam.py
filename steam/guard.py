@@ -11,7 +11,6 @@ from hashlib import sha1
 import time
 from typing import TYPE_CHECKING, Any
 import logging
-import requests
 from tenacity import *
 from ._const import URL
 from .errors import ConfirmationError
@@ -144,7 +143,7 @@ class Confirmation:
         params["cid"] = self.data_conf_id
         params["ck"] = self.data_key
         resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
-        log.debug('%s status_code, %d response.content id:42069420' % (resp.status_code, resp.content))
+        log.debug('%d response.content id:42069420' % (resp.content))
         self._assert_valid(resp)
         # if op == "allow":
         #     resp_json = resp.json()
