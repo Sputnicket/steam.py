@@ -94,7 +94,7 @@ class HTTPClient:
         kwargs["headers"] = {"User-Agent": self.user_agent, **kwargs.get("headers", {})}
         payload = kwargs.get("data")
 
-        for tries in range(5):
+        for tries in range(7):
             async with self._session.request(method, url, **kwargs, proxy=self.proxy, proxy_auth=self.proxy_auth) as r:
                 log.debug("%s %s with PAYLOAD: %s has returned %d", method, r.url, payload, r.status)
 

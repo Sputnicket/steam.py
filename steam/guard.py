@@ -143,7 +143,7 @@ class Confirmation:
         params["cid"] = self.data_conf_id
         params["ck"] = self.data_key
         resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
-        log.debug('%d response.content id:42069420' % (resp.content))
+        log.debug('%d resp id:42069420' % (resp['success']))
         self._assert_valid(resp)
         # if op == "allow":
         #     resp_json = resp.json()
