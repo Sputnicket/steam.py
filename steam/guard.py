@@ -11,6 +11,7 @@ from hashlib import sha1
 import time
 from typing import TYPE_CHECKING, Any
 import logging
+import requests
 from tenacity import *
 from ._const import URL
 from .errors import ConfirmationError
