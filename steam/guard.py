@@ -136,20 +136,28 @@ class Confirmation:
         wait=wait_fixed(4),
         after=after_log(log, logging.DEBUG)
         )
+    async def _complete_op(self, params, op: str) -> None:
+        resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
+        if op == "allow":
+            if resp['success'] == 1:
+                self._assert_valid(resp)
+            else:
+                raise TryAgain
     async def _perform_op(self, op: str) -> None:
         log.debug('performing op %s', op)
         params = await self._confirm_params(op)
         params["op"] = op
         params["cid"] = self.data_conf_id
         params["ck"] = self.data_key
-        resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
-        log.debug('%d resp id:42069420' % (resp['success']))
-        self._assert_valid(resp)
-        if op == "allow":
-            if resp['success'] == 1:
-                pass
-            else:
-                raise TryAgain
+        await self._complete_op(params, op)
+        # resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
+        # log.debug('%d resp id:42069420' % (resp['success']))
+        # self._assert_valid(resp)
+        # if op == "allow":
+        #     if resp['success'] == 1:
+        #         pass
+        #     else:
+        #         raise TryAgain
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
         await self._perform_op("allow")
