@@ -143,13 +143,13 @@ class Confirmation:
         params["cid"] = self.data_conf_id
         params["ck"] = self.data_key
         resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
-        log.debug('paramaters for AJAX op: %s', params)
         log.debug('%d resp id:42069420' % (resp['success']))
         self._assert_valid(resp)
-        # if op == "allow":
-        #     resp_json = resp.json()
-        #     if resp_json == {'success': False}:
-        #         raise TryAgain
+        if op == "allow":
+            if resp['success'] == 1:
+                pass
+            else:
+                raise TryAgain
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
         await self._perform_op("allow")
