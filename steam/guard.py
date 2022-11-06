@@ -132,17 +132,16 @@ class Confirmation:
             self._state._confirmations_to_ignore.append(self.trade_id)
             raise ConfirmationError
     @retry(
-        stop=stop_after_attempt(5),
-        wait=wait_fixed(5),
+        stop=stop_after_attempt(4),
+        wait=wait_fixed(4),
         after=after_log(log, logging.DEBUG)
         )
     async def _complete_op(self, params, op: str) -> None:
         resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
         if op == "allow":
-            if resp['success'] == 1:
-                self._assert_valid(resp)
-            else:
+            if resp['success'] != 1:
                 raise TryAgain
+            self._state._confirmations_to_ignore.append(self.trade_id)
     async def _perform_op(self, op: str) -> None:
         log.debug('performing op %s', op)
         params = await self._confirm_params(op)
@@ -150,14 +149,6 @@ class Confirmation:
         params["cid"] = self.data_conf_id
         params["ck"] = self.data_key
         await self._complete_op(params, op)
-        # resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
-        # log.debug('%d resp id:42069420' % (resp['success']))
-        # self._assert_valid(resp)
-        # if op == "allow":
-        #     if resp['success'] == 1:
-        #         pass
-        #     else:
-        #         raise TryAgain
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
         await self._perform_op("allow")
