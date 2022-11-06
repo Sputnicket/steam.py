@@ -498,7 +498,7 @@ class ConnectionState(Registerable):
             raise ValueError("Cannot generate confirmation codes without passing an identity_secret")
 
         steam_time = self.steam_time
-        timestamp = int(steam_time.timestamp())
+        timestamp = int(time())
         try:
             lock, last_confirmation_time = self.confirmation_generation_locks[tag]
         except KeyError:
