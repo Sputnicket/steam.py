@@ -533,7 +533,7 @@ class ConnectionState(Registerable):
                     return True
                 else:
                     await asyncio.sleep(0.25)
-        return False
+        return False 
                 # if self.client.identity_secret:
         #     confirmation = self.get_confirmation(trade_id) or await self.fetch_confirmation(trade_id)
         #     if confirmation is not None:
