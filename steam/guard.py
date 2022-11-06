@@ -138,10 +138,12 @@ class Confirmation:
         )
     async def _complete_op(self, params, op: str) -> None:
         resp = await self._state.http.get(URL.COMMUNITY / "mobileconf/ajaxop", params=params)
+        log.debug(f'trade:id {self.trade_id} with resp {resp}')
         if op == "allow":
             if resp['success'] != 1:
                 raise TryAgain
-            self._state._confirmations_to_ignore.append(self.trade_id)
+            else:
+                self._state._confirmations_to_ignore.append(self.trade_id)
     async def _perform_op(self, op: str) -> None:
         log.debug('performing op %s', op)
         params = await self._confirm_params(op)
