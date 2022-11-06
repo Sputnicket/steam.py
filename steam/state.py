@@ -461,14 +461,13 @@ class ConnectionState(Registerable):
                     log.debug("FETCHED CONFIRMATIONS FROM LOOP")
                 else:
                     log.debug('no identity secret provided')
-                await asyncio.sleep(15 + random.randint(0,3))
+                await asyncio.sleep(20 + random.randint(0,3))
             except:
                 log.exception('error fetching confirmation')
                 await asyncio.sleep(15 + random.randint(0,3))
     async def _fetch_confirmations(self) -> dict[int, Confirmation]:
         params = await self._create_confirmation_params("conf")
         headers = {"X-Requested-With": "com.valvesoftware.android.steam.community"}
-        await asyncio.sleep(5)
         resp = await self.http.get(URL.COMMUNITY / "mobileconf/conf", params=params, headers=headers)
 
         if "incorrect Steam Guard codes." in resp:

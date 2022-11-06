@@ -132,8 +132,8 @@ class Confirmation:
             self._state._confirmations_to_ignore.append(self.trade_id)
             raise ConfirmationError
     @retry(
-        stop=stop_after_attempt(4),
-        wait=wait_fixed(4),
+        stop=stop_after_attempt(5),
+        wait=wait_fixed(5),
         after=after_log(log, logging.DEBUG)
         )
     async def _complete_op(self, params, op: str) -> None:
