@@ -149,10 +149,13 @@ class Confirmation:
                 raise TryAgain
             else:
                 self._state._confirmations_to_ignore.append(self.trade_id)
-
+                return resp
     async def confirm(self) -> None:
         log.debug('recivied confirmation')
-        await self._perform_op("allow")
+        op_resp = await self._perform_op("allow")
+        if op_resp is not None:
+            return None
+        return False  
 
     async def cancel(self) -> None:
         await self._perform_op("cancel")

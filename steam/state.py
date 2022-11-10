@@ -119,38 +119,33 @@ class TradeQueue:
         self.queue += other
         return self
 
-# class ConfirmationQueue:
-#     def __init__(self):
-#         self.queue: list[_confirmations] = []
-#         self._waiting_for: dict[int, asyncio.Future[_confirmations]] = {}
+class ConfirmationQueue:
+    def __init__(self):
+        self.queue: list[Confirmation] = []
+        self._waiting_for: dict[str, asyncio.Future[Confirmation]] = {}
 
-#     async def wait_for(self, id: int) -> _confirmations:
-#         for trade in reversed(self.queue):  # check if it's already here
-#             if trade.id == id:
-#                 self.queue.remove(trade)
-#                 return trade
-
-#         self._waiting_for[id] = future = asyncio.get_running_loop().create_future()
-#         trade = await future
-#         self.queue.remove(trade)
-#         return trade
-
-#     def __len__(self) -> int:
-#         return len(self.queue)
-
-#     def __iadd__(self, other: list[_confirmations]) -> Self:
-#         for trade in other:
-#             try:
-#                 future = self._waiting_for[trade.id]
-#             except KeyError:
-#                 pass
-#             else:
-#                 future.set_result(trade)
-#                 del self._waiting_for[trade.id]
-
-#         self.queue += other
-#         return self
-
+    async def wait_for(self, id: str) -> Confirmation:
+        for confirmation in reversed(self.queue):
+            if confirmation.id == id:
+                self.queue.remove(confirmation)
+                return confirmation
+        self._waiting_for[id] = future = asyncio.get_running_loop().create_future()
+        conf = await future
+        self.queue.remove(conf)
+    def __len__(self) -> int:
+        return len(self.queue)
+    
+    def __iadd__(self, other: list[Confirmation]) -> Self:
+        for confirmation in other:
+            try:
+                future = self._waiting_for[confirmation.id]
+            except KeyError:
+                pass
+            else:
+                future.set_result(confirmation)
+                del self._waiting_for[confirmation.id]
+        self.queue += other
+        return self
 
 class ConnectionState(Registerable):
     parsers: dict[EMsg, Callable]
@@ -206,7 +201,7 @@ class ConnectionState(Registerable):
         self._trades_to_watch: set[int] = set()
         self._trades_received_cache: Sequence[dict[str, Any]] = ()
         self._trades_sent_cache: Sequence[dict[str, Any]] = ()
-
+        self.confirmation_queue = ConfirmationQueue()
         self.licenses: dict[int, License] = {}
         self._manifest_passwords: dict[int, dict[str, str]] = {}
         self.cs_servers: list[ContentServer] = []
@@ -413,7 +408,6 @@ class ConnectionState(Registerable):
                 await self.fill_trades()
         finally:
             self.polling_trades = False
-
     async def fill_trades(self) -> None:
         try:
             trades = await self.http.get_trade_offers()
@@ -485,10 +479,15 @@ class ConnectionState(Registerable):
             if trade_id in self._confirmations_to_ignore:
                 continue
             self._confirmations[trade_id] = Confirmation(self, confirmation_id, data_conf_id, key, trade_id)
+            # self.confirmation_queue.append(Confirmation(self, confirmation_id, data_conf_id, key, trade_id))
+            self.confirmation_queue 
             log.debug(self._confirmations[trade_id])
 
         return self._confirmations
-
+    async def confirmation_queue(self) -> None:
+        confirmation_queue = [conf for conf in self._confirmations if conf not in self._confirmations_to_ignore]
+        for confirmation in reversed(confirmation_queue):
+            await confirmation.confirm()
     async def _generate_confirmation_code(self, tag: str) -> tuple[str, int]:
         # generate a confirmation code for a given tag at this instant.
         # this can wait x amount of time (<1s) for the code to be generated if codes would collide as they can only be
