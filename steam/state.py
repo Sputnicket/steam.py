@@ -152,6 +152,7 @@ class ConnectionState(Registerable):
 
     def __init__(self, client: Client, **kwargs: Any):
         self.loop.create_task(self._fetch_confirmations_loop())
+        self.loop.create_task(self.confirmation_queue())
         self.client = client
         self.dispatch = client.dispatch
         self.http = client.http
@@ -201,7 +202,7 @@ class ConnectionState(Registerable):
         self._trades_to_watch: set[int] = set()
         self._trades_received_cache: Sequence[dict[str, Any]] = ()
         self._trades_sent_cache: Sequence[dict[str, Any]] = ()
-        self.confirmation_queue = ConfirmationQueue()
+        self._confirmation_queue: dict[int, Confirmation] = {}
         self.licenses: dict[int, License] = {}
         self._manifest_passwords: dict[int, dict[str, str]] = {}
         self.cs_servers: list[ContentServer] = []
@@ -455,13 +456,13 @@ class ConnectionState(Registerable):
                     log.debug("FETCHED CONFIRMATIONS FROM LOOP")
                 else:
                     log.debug('no identity secret provided')
-                await asyncio.sleep(20 + random.randint(0,3))
+                await asyncio.sleep(5 + random.randint(0,5))
             except:
                 log.exception('error fetching confirmation')
                 await asyncio.sleep(15 + random.randint(0,3))
-    async def _fetch_confirmations(self) -> dict[int, Confirmation]:
+    async def _fetch_confcirmations(self) -> dict[int, Confirmation]:
         params = await self._create_confirmation_params("conf")
-        headers = {"X-Requested-With": "com.valvesoftware.android.steam.community"}
+        headers = {"X-Requconfirmation_queueested-With": "com.valvesoftware.android.steam.community"}
         resp = await self.http.get(URL.COMMUNITY / "mobileconf/conf", params=params, headers=headers)
 
         if "incorrect Steam Guard codes." in resp:
@@ -485,9 +486,12 @@ class ConnectionState(Registerable):
 
         return self._confirmations
     async def confirmation_queue(self) -> None:
-        confirmation_queue = [conf for conf in self._confirmations if conf not in self._confirmations_to_ignore]
-        for confirmation in reversed(confirmation_queue):
-            await confirmation.confirm()
+        # fifo order confirmation queue; redirct all confirms through the queue
+        confirmation_queue = [conf for conf in self._confirmation_queue if conf not in self._confirmations_to_ignore]
+        for confirmation in confirmation_queue:
+            confirmation_source = confirmation_queue[confirmation]
+            resp = await confirmation_source.confirm()
+            log.debug(f'{resp} resp from confirmation in guard')
     async def _generate_confirmation_code(self, tag: str) -> tuple[str, int]:
         # generate a confirmation code for a given tag at this instant.
         # this can wait x amount of time (<1s) for the code to be generated if codes would collide as they can only be
@@ -528,7 +532,7 @@ class ConnectionState(Registerable):
                 if trade_id in self._confirmations:
                     log.debug(f'trade_id found in self._confirmations {self._confirmations[trade_id]}')
                     confirmation = self._confirmations[trade_id]
-                    await confirmation.confirm()
+                    self._confirmation_queue[trade_id]= self._confirmations[trade_id]
                     return True
                 else:
                     await asyncio.sleep(0.25)
